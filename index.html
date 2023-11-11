@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Chatbot</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1em;
+        }
+
+        nav {
+            background-color: #444;
+            padding: 0.5em;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            display: inline;
+            margin-right: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: white;
+        }
+
+        section {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        #chat-container {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        input, button {
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            section {
+                max-width: 100%;
+                padding: 10px;
+            }
+        }
+    </style>
+    <script>
+        function getRuleBasedResponse(userMessage) {
+            // Define rules and responses
+            const rules = [
+                { pattern: /(hello|hi|hey)/i, response: 'Hi there!' },
+                { pattern: /how are you/i, response: 'I am just a chatbot created by David, but thanks for asking!' },
+                { pattern: /physics/i, response: 'Physics is the study of matter, energy, and the fundamental forces that govern the universe.' },
+                { pattern: /chemistry/i, response: 'Chemistry is the branch of science that deals with the properties, composition, and behavior of matter.' },
+                { pattern: /test tube/i, response: 'The inner diameter of a test tube can be measured accurately using a pair of vernier calipers.' },
+                { pattern: /spiderman video/i, response: '<video width="320" height="240" controls><source src="pexels-marc-espejo-9228228 (1080p).mp4" type="video/mp4">Your browser does not support the video tag.</video>' },
+                { pattern: /diagram of the heart/i, response: '<img src="heart.png" alt="Your Picture" width="320" height="240">' },
+                { pattern: /Zinc Oxide is a/i, response: 'Amphoteric Oxide' },
+                { pattern: /diagram of the respiratory system/i, response: '<img src="respiratory system.webp" alt="Your Picture" width="320" height="240">' },
+                { pattern: /diagram of the lungs/i, response: '<img src="lungs.png" alt="Your Picture" width="320" height="240">' },
+                // Add more rules as needed
+            ];
+
+            // Check user's message against rules
+            for (const rule of rules) {
+                if (rule.pattern.test(userMessage)) {
+                    return rule.response;
+                }
+            }
+
+            // Default response if no match
+            return 'I did not understand that.';
+        }
+
+        function sendMessage() {
+            const userMessage = document.getElementById('user-input').value;
+            if (userMessage.trim() === '') return;
+
+            appendMessage('You: ' + userMessage, 'user');
+            document.getElementById('user-input').value = '';
+
+            const botMessage = getRuleBasedResponse(userMessage);
+            appendMessage('Bot: ' + botMessage, 'bot');
+        }
+
+        function appendMessage(message, sender) {
+            const messageElement = document.createElement('div');
+
+            if (sender === 'bot') {
+                messageElement.style.backgroundColor = '#e0e0e0';
+                messageElement.innerHTML = message;  // Display HTML content for bot responses
+            } else {
+                messageElement.style.backgroundColor = '#d3ffd3';
+                messageElement.textContent = message;
+            }
+
+            document.getElementById('chat-container').appendChild(messageElement);
+            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
+        }
+    </script>
+</head>
+<body>
+
+<header>
+    <h1>Science Chatbot</h1>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+    </ul>
+</nav>
+
+<section id="home">
+    <h2>Welcome to the Science Chatbot</h2>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Type your question...">
+    <button onclick="sendMessage()">Send</button>
+</section>
+
+<section id="about">
+    <h2>About Science Chatbot</h2>
+    <p>This chatbot is designed to help answer questions related to physics, biology, and chemistry. Please feel free to support me through this account number 11575884543.</p>
+</section>
+
+</body>
+</html>
