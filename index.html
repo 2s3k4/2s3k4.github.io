@@ -71,7 +71,8 @@
     #aboutModal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,.4); z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
+      display: none; /* <-- hide by default! */
+      align-items: center; justify-content: center;
     }
     #aboutModalContent {
       background: #fff; max-width: 400px; padding: 2em; border-radius: 8px;
@@ -148,7 +149,7 @@
       <strong>Daily Quiz</strong> was created by <strong>David Ime James</strong> to help students learn and improve every day in a fun and engaging way.<br>
       Enjoy daily quizzes, track your progress, earn badges, and keep learning!
     </p>
-    <button onclick="hideAbout()" class="btn">Close</button>
+    <button id="closeAboutBtn" class="btn">Close</button>
   </div>
 </div>
 <div id="footer">
@@ -235,7 +236,6 @@ function fetchQuestions(cb) {
         let choices = q.incorrect_answers.slice();
         let idx = Math.floor(Math.random() * 4);
         choices.splice(idx, 0, q.correct_answer);
-        // Enrich: add a Wikipedia link for explanation
         let explanation = `Learn more: <a target="_blank" href="https://en.wikipedia.org/wiki/${encodeURIComponent(q.correct_answer)}">${q.correct_answer}</a>`;
         return {
           question: q.question,
@@ -251,7 +251,6 @@ function showEvent() {
   const eventDiv = document.getElementById("event");
   eventDiv.innerHTML = "";
   const today = new Date();
-  // Example: Fathers Day (3rd Sunday in June)
   if (today.getMonth() === 5) {
     let firstDay = new Date(today.getFullYear(), 5, 1);
     let dayOfWeek = firstDay.getDay();
@@ -458,11 +457,8 @@ function showBadges() {
 }
 function updateBadges() {
   if (!state.badges) state.badges = [];
-  // Streak badge
   if (state.streak >= 7 && !state.badges.includes("7-day Streak")) state.badges.push("7-day Streak");
-  // High score badge
   if (state.score >= 9 && !state.badges.includes("Quiz Master")) state.badges.push("Quiz Master");
-  // Improvement badge
   let perf = getPerformance(state.username);
   if (perf.length >= 2 && perf[perf.length-1].score > perf[perf.length-2].score && !state.badges.includes("Improver")) {
     state.badges.push("Improver");
@@ -502,20 +498,19 @@ function showReview() {
   });
   reviewDiv.innerHTML = html;
 }
-// Dark mode toggle
 function toggleTheme() {
   let theme = (localStorage.getItem("theme") || "light");
   theme = (theme === "light") ? "dark" : "light";
   localStorage.setItem("theme", theme);
   document.body.setAttribute('data-theme', theme);
 }
-// About modal
 function showAbout() {
   document.getElementById("aboutModal").style.display = "flex";
 }
 function hideAbout() {
   document.getElementById("aboutModal").style.display = "none";
 }
+
 // Event handlers
 document.getElementById("loginBtn").onclick = function() {
   let u = document.getElementById("username").value.trim();
@@ -543,14 +538,23 @@ document.getElementById("logoutBtn2").onclick = function() {
   showLogin();
 };
 document.getElementById("themeBtn").onclick = toggleTheme;
+
+// About Modal: close button handler
+document.getElementById("closeAboutBtn").onclick = hideAbout;
+
+// Keyboard: Esc key closes modal
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape") {
+    hideAbout();
+  }
+});
+
 window.onload = function() {
   showLogin();
   let theme = localStorage.getItem("theme") || "light";
   document.body.setAttribute('data-theme', theme);
+  hideAbout(); // Always hide modal on load
 };
+
 // Timer logic
-function startTimer() {
-  state.timer = 60;
-  updateTimer();
-  state.timerInterval = setInterval(() => {
-    state.ti
+functi
