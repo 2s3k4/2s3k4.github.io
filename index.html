@@ -2,62 +2,194 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>IC</title>
+  <title>CUBIXX quiz</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 500px; margin: 30px auto; }
-    #image-preview { max-width: 100%; margin: 20px 0; border: 1px solid #ccc; }
-    #result { font-size: 1.2em; margin-top: 20px; }
-    input[type="file"] { margin-top: 10px; }
-    button { padding: 10px 20px; font-size: 1em; }
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+    #container { max-width: 500px; margin: 40px auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px #aaa; }
+    h1 { text-align: center; }
+    #login, #quiz, #done { display: none; }
+    .question { margin-bottom: 2em; }
+    .answers label { display: block; margin: 0.3em 0; }
+    .btn { background: #0078d4; color: #fff; border: none; padding: 0.6em 1.2em; border-radius: 4px; cursor: pointer; }
+    .btn:disabled { background: #ccc; }
+    #progress { margin-bottom: 1em; }
   </style>
 </head>
 <body>
-  <h1>AI Image Classifier</h1>
-  <input type="file" id="image-upload" accept="image/*">
-  <img id="image-preview" src="" alt="Image Preview" style="display:none;">
-  <button id="classify-btn" disabled>Classify Image</button>
-  <div id="result"></div>
+<div id="container">
+  <h1>Daily Quiz</h1>
+  <div id="login">
+    <label>Enter your username:</label>
+    <input id="username" type="text">
+    <button id="loginBtn" class="btn">Login</button>
+  </div>
+  <div id="quiz">
+    <div id="progress"></div>
+    <div class="question">
+      <div id="qtext"></div>
+      <form id="answers" class="answers"></form>
+    </div>
+    <button id="nextBtn" class="btn" disabled>Next</button>
+  </div>
+  <div id="done">
+    <h2>Quiz Complete!</h2>
+    <div id="score"></div>
+    <p>Come back tomorrow for 10 new questions!</p>
+    <button id="logoutBtn" class="btn">Logout</button>
+  </div>
+</div>
+<script>
+const QUESTIONS_PER_DAY = 10;
+const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple";
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
-  <script>
-    let imageElement = document.getElementById('image-preview');
-    let classifyBtn = document.getElementById('classify-btn');
-    let resultDiv = document.getElementById('result');
-    let uploadedImage = null;
-    let net;
+let state = {
+  username: null,
+  currentQ: 0,
+  score: 0,
+  questions: [],
+  today: null,
+  answered: []
+};
 
-    // Load MobileNet
-    mobilenet.load().then(model => {
-      net = model;
-      classifyBtn.disabled = false;
+function saveProgress() {
+  localStorage.setItem("quiz-"+state.username, JSON.stringify({
+    today: state.today, currentQ: state.currentQ, score: state.score,
+    questions: state.questions, answered: state.answered
+  }));
+}
+
+function loadProgress(username) {
+  let d = localStorage.getItem("quiz-"+username);
+  return d ? JSON.parse(d) : null;
+}
+
+function fetchQuestions(cb) {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      let qs = data.results.map(q => {
+        let choices = q.incorrect_answers.slice();
+        let idx = Math.floor(Math.random() * 4);
+        choices.splice(idx, 0, q.correct_answer);
+        return {
+          question: q.question,
+          correct: q.correct_answer,
+          choices: choices
+        };
+      });
+      cb(qs);
     });
+}
 
-    document.getElementById('image-upload').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        imageElement.src = evt.target.result;
-        imageElement.style.display = 'block';
-        resultDiv.textContent = '';
-        uploadedImage = evt.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
+function showLogin() {
+  document.getElementById("login").style.display = "block";
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("done").style.display = "none";
+}
+function showQuiz() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  document.getElementById("done").style.display = "none";
+}
+function showDone() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("done").style.display = "block";
+  document.getElementById("score").innerText = `Your score: ${state.score} / ${QUESTIONS_PER_DAY}`;
+}
 
-    classifyBtn.addEventListener('click', async function() {
-      if (!uploadedImage || !net) return;
-      resultDiv.textContent = 'Classifying...';
-      const predictions = await net.classify(imageElement);
-      if (predictions.length > 0) {
-        resultDiv.innerHTML = predictions.map(
-          p => `<strong>${p.className}</strong>: ${(p.probability * 100).toFixed(2)}%`
-        ).join('<br>');
-      } else {
-        resultDiv.textContent = 'No prediction.';
-      }
+function todaysDateStr() {
+  let d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function startQuiz() {
+  state.currentQ = 0;
+  state.score = 0;
+  state.answered = [];
+  showQuiz();
+  showQuestion();
+}
+
+function showQuestion() {
+  let q = state.questions[state.currentQ];
+  document.getElementById("progress").innerText = `Question ${state.currentQ+1} of ${QUESTIONS_PER_DAY}`;
+  document.getElementById("qtext").innerHTML = q.question;
+  let answers = document.getElementById("answers");
+  answers.innerHTML = "";
+  q.choices.forEach((a, i) => {
+    let id = "ans"+i;
+    let radio = `<input type="radio" name="ans" id="${id}" value="${a}">`;
+    let label = `<label for="${id}">${a}</label>`;
+    answers.innerHTML += radio + label;
+  });
+  document.getElementById("nextBtn").disabled = true;
+  document.querySelectorAll('input[name="ans"]').forEach(el => {
+    el.addEventListener('change', () => {
+      document.getElementById("nextBtn").disabled = false;
     });
-  </script>
+  });
+}
+
+function handleNext() {
+  let selected = document.querySelector('input[name="ans"]:checked');
+  if (!selected) return;
+  let ans = selected.value;
+  let q = state.questions[state.currentQ];
+  if (ans === q.correct) state.score++;
+  state.answered.push(ans);
+  state.currentQ++;
+  saveProgress();
+  if (state.currentQ < QUESTIONS_PER_DAY) {
+    showQuestion();
+  } else {
+    saveProgress();
+    showDone();
+  }
+}
+
+function tryResumeQuiz() {
+  let p = loadProgress(state.username);
+  let today = todaysDateStr();
+  if (p && p.today === today) {
+    state.currentQ = p.currentQ;
+    state.score = p.score;
+    state.questions = p.questions;
+    state.answered = p.answered;
+    state.today = today;
+    if (state.currentQ >= QUESTIONS_PER_DAY) {
+      showDone();
+    } else {
+      showQuiz();
+      showQuestion();
+    }
+  } else {
+    fetchQuestions(qs => {
+      state.currentQ = 0;
+      state.score = 0;
+      state.questions = qs;
+      state.answered = [];
+      state.today = today;
+      saveProgress();
+      startQuiz();
+    });
+  }
+}
+
+// Event handlers
+document.getElementById("loginBtn").onclick = function() {
+  let u = document.getElementById("username").value.trim();
+  if (!u) { alert("Please enter a username."); return; }
+  state.username = u;
+  tryResumeQuiz();
+};
+document.getElementById("nextBtn").onclick = handleNext;
+document.getElementById("logoutBtn").onclick = function() {
+  state = { username: null, currentQ: 0, score: 0, questions: [], today: null, answered: [] };
+  showLogin();
+};
+
+window.onload = showLogin;
+</script>
 </body>
-</html>
+  </html>
