@@ -1,154 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Science Chatbot</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        header {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1em;
-        }
-
-        nav {
-            background-color: #444;
-            padding: 0.5em;
-        }
-
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        nav ul li {
-            display: inline;
-            margin-right: 10px;
-        }
-
-        a {
-            text-decoration: none;
-            color: white;
-        }
-
-        section {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-        }
-
-        #chat-container {
-            height: 200px;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
-        }
-
-        input, button {
-            margin-top: 10px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 600px) {
-            section {
-                max-width: 100%;
-                padding: 10px;
-            }
-        }
-    </style>
-    <script>
-        function getRuleBasedResponse(userMessage) {
-            // Define rules and responses
-            const rules = [
-                { pattern: /(hello|hi|hey)/i, response: 'Hi there!' },
-                { pattern: /how are you/i, response: 'I am just a chatbot created by David, but thanks for asking!' },
-                { pattern: /physics/i, response: 'Physics is the study of matter, energy, and the fundamental forces that govern the universe.' },
-                { pattern: /chemistry/i, response: 'Chemistry is the branch of science that deals with the properties, composition, and behavior of matter.' },
-                { pattern: /test tube/i, response: 'The inner diameter of a test tube can be measured accurately using a pair of vernier calipers.' },
-                { pattern: /spiderman video/i, response: '<video width="320" height="240" controls><source src="pexels-marc-espejo-9228228 (1080p).mp4" type="video/mp4">Your browser does not support the video tag.</video>' },
-                { pattern: /diagram/i, response: '<img src="heart.png" alt="There was an error loading your request please view it on another source" width="320" height="240">' },
-                { pattern: /Zinc Oxide is a/i, response: 'Amphoteric Oxide' },
-                 { pattern: /diagram of the respiratory system/i, response: '<img src="respiratory system.webp" alt="Please view it on another source" width="320" height="240">' },
-
-                { pattern: /diagram of the lungs/i, response: '<img src="bridge.png" alt="Your Picture" width="320" height="240">' },
-                { pattern: /Meaning of a Noun/i, response: 'A noun ia a name of a person, animal, place or thing' },
-                { pattern: /Meaning of a Verb/i, response: 'A verb is an action word' },
-                
-                // Add more rules as needed
-            ];
-
-            // Check user's message against rules
-            for (const rule of rules) {
-                if (rule.pattern.test(userMessage)) {
-                    return rule.response;
-                }
-            }
-
-            // Default response if no match
-            return 'I did not understand that.';
-        }
-
-        function sendMessage() {
-            const userMessage = document.getElementById('user-input').value;
-            if (userMessage.trim() === '') return;
-
-            appendMessage('You: ' + userMessage, 'user');
-            document.getElementById('user-input').value = '';
-
-            const botMessage = getRuleBasedResponse(userMessage);
-            appendMessage('Bot: ' + botMessage, 'bot');
-        }
-
-        function appendMessage(message, sender) {
-            const messageElement = document.createElement('div');
-
-            if (sender === 'bot') {
-                messageElement.style.backgroundColor = '#e0e0e0';
-                messageElement.innerHTML = message;  // Display HTML content for bot responses
-            } else {
-                messageElement.style.backgroundColor = '#d3ffd3';
-                messageElement.textContent = message;
-            }
-
-            document.getElementById('chat-container').appendChild(messageElement);
-            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
-        }
-    </script>
+  <meta charset="UTF-8">
+  <title>IC</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 30px auto; }
+    #image-preview { max-width: 100%; margin: 20px 0; border: 1px solid #ccc; }
+    #result { font-size: 1.2em; margin-top: 20px; }
+    input[type="file"] { margin-top: 10px; }
+    button { padding: 10px 20px; font-size: 1em; }
+  </style>
 </head>
 <body>
+  <h1>AI Image Classifier</h1>
+  <input type="file" id="image-upload" accept="image/*">
+  <img id="image-preview" src="" alt="Image Preview" style="display:none;">
+  <button id="classify-btn" disabled>Classify Image</button>
+  <div id="result"></div>
 
-<header>
-    <h1>David Science Chatbot</h1>
-</header>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+  <script>
+    let imageElement = document.getElementById('image-preview');
+    let classifyBtn = document.getElementById('classify-btn');
+    let resultDiv = document.getElementById('result');
+    let uploadedImage = null;
+    let net;
 
-<nav>
-    <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About</a></li>
-    </ul>
-</nav>
+    // Load MobileNet
+    mobilenet.load().then(model => {
+      net = model;
+      classifyBtn.disabled = false;
+    });
 
-<section id="home">
-    <h2>Welcome to the Science Chatbot</h2>
-    <div id="chat-container"></div>
-    <input type="text" id="user-input" placeholder="Type your question...">
-    <button onclick="sendMessage()">Send</button>
-</section>
+    document.getElementById('image-upload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        imageElement.src = evt.target.result;
+        imageElement.style.display = 'block';
+        resultDiv.textContent = '';
+        uploadedImage = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
 
-<section id="about">
-    <h2>About Science Chatbot</h2>
-    <p>This chatbot is designed to help answer questions related to physics, biology, and chemistry.</p>
-</section>
-
+    classifyBtn.addEventListener('click', async function() {
+      if (!uploadedImage || !net) return;
+      resultDiv.textContent = 'Classifying...';
+      const predictions = await net.classify(imageElement);
+      if (predictions.length > 0) {
+        resultDiv.innerHTML = predictions.map(
+          p => `<strong>${p.className}</strong>: ${(p.probability * 100).toFixed(2)}%`
+        ).join('<br>');
+      } else {
+        resultDiv.textContent = 'No prediction.';
+      }
+    });
+  </script>
 </body>
 </html>
