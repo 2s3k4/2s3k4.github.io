@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CUBIXX quiz</title>
+  <title>CUBIXX Quiz Plus</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     html, body { height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f7f7f7; min-height: 100vh; }
@@ -19,7 +19,7 @@
       justify-content: center;
     }
     h1, h2 { text-align: center; }
-    #login, #quiz, #done, #learn, #event, #leaderboard, #aboutModal { display: none; }
+    #login, #quiz, #done, #learn, #leaderboard, #aboutModal { display: none; }
     .question { margin-bottom: 2em; }
     .answers label { display: block; margin: 0.3em 0; }
     .btn {
@@ -71,7 +71,7 @@
     #aboutModal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,.4); z-index: 1000;
-      display: none; /* <-- hide by default! */
+      display: none;
       align-items: center; justify-content: center;
     }
     #aboutModalContent {
@@ -98,7 +98,6 @@
 <body>
 <div id="container">
   <span id="aboutLink" onclick="showAbout()">About</span>
-  <div id="event"></div>
   <h1>Daily Quiz</h1>
   <div id="motivation"></div>
   <div id="performance"></div>
@@ -146,14 +145,14 @@
   <div id="aboutModalContent">
     <h2>About This Platform</h2>
     <p>
-      <strong>Daily Quiz</strong> was created by <strong>David Ime James</strong> to help students learn and improve every day in a fun and engaging way.<br>
+      <strong>Daily Quiz</strong> helps you learn and improve every day in a fun and engaging way.<br>
       Enjoy daily quizzes, track your progress, earn badges, and keep learning!
     </p>
     <button id="closeAboutBtn" class="btn">Close</button>
   </div>
 </div>
 <div id="footer">
-  This platform was created by David Ime James to help students learn and grow daily. &copy; 2025 All rights reserved.
+  &copy; 2025 Daily Quiz. Enjoy learning every day!
 </div>
 <script>
 const QUESTIONS_PER_DAY = 10;
@@ -213,18 +212,18 @@ function getPerformance(username) {
 function saveLeaderboard(username, score) {
   let lb = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
   lb.push({ user: username, score: score, date: new Date().toISOString().slice(0,10) });
-  lb = lb.slice(-100); // Keep latest 100 entries
+  lb = lb.slice(-100);
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(lb));
 }
 function getLeaderboard() {
   let lb = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
-  // Aggregate by user: max score for each day
   let users = {};
   lb.forEach(e => {
     let key = e.user+"-"+e.date;
     if (!users[key] || e.score > users[key].score) users[key] = e;
   });
   let arr = Object.values(users);
+  arr = arr.filter(e => e.date === todaysDateStr());
   arr.sort((a,b) => b.score - a.score);
   return arr.slice(0, 5);
 }
@@ -247,30 +246,11 @@ function fetchQuestions(cb) {
       cb(qs);
     });
 }
-function showEvent() {
-  const eventDiv = document.getElementById("event");
-  eventDiv.innerHTML = "";
-  const today = new Date();
-  if (today.getMonth() === 5) {
-    let firstDay = new Date(today.getFullYear(), 5, 1);
-    let dayOfWeek = firstDay.getDay();
-    let thirdSunday = 1 + ((7 - dayOfWeek) % 7) + 14;
-    if (today.getDate() === thirdSunday) {
-      eventDiv.innerHTML = `<div style="background:#ffefc0;padding:1em;border-radius:8px;text-align:center;margin-bottom:1em;">
-      <strong>🎉 Happy Father's Day! 🎉</strong><br>
-      Celebrate the amazing dads in our lives!<br>
-      <small>Special event: Double points for today's quiz!</small>
-      </div>`;
-    }
-  }
-  eventDiv.style.display = eventDiv.innerHTML ? "block" : "none";
-}
 function showMotivation() {
   let q = MOTIVATION_QUOTES[Math.floor(Math.random()*MOTIVATION_QUOTES.length)];
   document.getElementById("motivation").innerText = q;
 }
 function showLogin() {
-  showEvent();
   showMotivation();
   document.getElementById("login").style.display = "block";
   document.getElementById("quiz").style.display = "none";
@@ -325,14 +305,6 @@ function todaysDateStr() {
   let d = new Date();
   return d.toISOString().slice(0,10);
 }
-function isFathersDay() {
-  const today = new Date();
-  if (today.getMonth() !== 5) return false;
-  let firstDay = new Date(today.getFullYear(), 5, 1);
-  let dayOfWeek = firstDay.getDay();
-  let thirdSunday = 1 + ((7 - dayOfWeek) % 7) + 14;
-  return today.getDate() === thirdSunday;
-}
 function startQuiz() {
   state.currentQ = 0;
   state.score = 0;
@@ -372,7 +344,7 @@ function handleNext() {
   let ans = selected.value;
   let q = state.questions[state.currentQ];
   let isCorrect = ans === q.correct;
-  let point = (isFathersDay() ? 2 : 1) * (state.hintUsed ? 0.5 : 1); // half point if hint used
+  let point = state.hintUsed ? 0.5 : 1;
   if (isCorrect) state.score += point;
   state.answered.push({ answer: ans, correct: q.correct, question: q.question, explanation: q.explanation || "", usedHint: state.hintUsed });
   state.currentQ++;
@@ -548,16 +520,12 @@ document.addEventListener("keydown", function(e){
     hideAbout();
   }
 });
-
 window.onload = function() {
   showLogin();
   let theme = localStorage.getItem("theme") || "light";
   document.body.setAttribute('data-theme', theme);
-  hideAbout(); // Always hide modal on load
+  hideAbout();
 };
-
-// Timer logic
-  <!-- ...rest of your code above... -->
 
 // Timer logic
 function startTimer() {
@@ -572,20 +540,17 @@ function startTimer() {
     }
   }, 1000);
 }
-
 function stopTimer() {
   if (state.timerInterval) {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
   }
 }
-
 function resetTimer() {
   stopTimer();
   state.timer = 60;
   updateTimerDisplay();
 }
-
 function updateTimerDisplay() {
   const timerSpan = document.getElementById("timer");
   if (timerSpan) {
@@ -597,9 +562,7 @@ function updateTimerDisplay() {
     }
   }
 }
-
 function autoNextDueToTimeout() {
-  // Mark as unanswered or wrong, go to next question
   let q = state.questions[state.currentQ];
   state.answered.push({
     answer: null,
@@ -622,3 +585,5 @@ function autoNextDueToTimeout() {
   }
 }
 </script>
+</body>
+  </html>
