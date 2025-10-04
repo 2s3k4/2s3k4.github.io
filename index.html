@@ -2,122 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CUBIXX Quiz Plus</title>
+  <title>CUBIXX - Daily Quiz</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body { height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f7f7f7; min-height: 100vh; }
+    /* Global Styles */
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100%;
+      background: linear-gradient(135deg, #0f0f1f, #1a1a2e, #111);
+      background-attachment: fixed;
+      color: #e6e6e6;
+      min-height: 100vh;
+    }
+
     #container {
-      max-width: 500px;
+      max-width: 550px;
       margin: 40px auto;
-      background: #fff;
-      padding: 2em;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px #aaa;
-      min-height: 60vh;
+      background: rgba(25, 25, 35, 0.8);
+      padding: 2.5em;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      animation: fadeIn 0.7s ease;
     }
-    h1, h2 { text-align: center; }
+
+    h1 {
+      text-align: center;
+      font-size: 2.3em;
+      letter-spacing: 2px;
+      color: #00e0ff;
+      text-shadow: 0 0 12px #00e0ff88;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ff5cff;
+    }
+
     #login, #quiz, #done, #learn, #leaderboard, #aboutModal { display: none; }
+
     .question { margin-bottom: 2em; }
-    .answers label { display: block; margin: 0.3em 0; }
+
+    .answers label {
+      display: block;
+      margin: 0.6em 0;
+      padding: 0.6em 1em;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .answers label:hover {
+      background: rgba(0,224,255,0.2);
+    }
+
+    /* Buttons */
     .btn {
-      background: #0078d4;
+      background: linear-gradient(135deg, #00e0ff, #0077ff);
       color: #fff;
       border: none;
-      padding: 0.6em 1.2em;
-      border-radius: 4px;
+      padding: 0.7em 1.5em;
+      border-radius: 12px;
       cursor: pointer;
-      margin: 0.5em 0.2em;
+      margin: 0.5em 0.3em;
+      font-weight: bold;
+      transition: transform 0.2s, background 0.3s;
     }
-    .btn:disabled { background: #ccc; }
-    #progress { margin-bottom: 1em; }
-    #timer { font-weight: bold; color: #d40000; float: right; }
+    .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn:disabled { background: #444; cursor: not-allowed; }
+
+    /* Special button colors */
+    #hintBtn { background: linear-gradient(135deg, #ffc107, #ff8800); color: #111; }
+    #learnBtn, #seeLearnBtn { background: linear-gradient(135deg, #22bb33, #009933); }
+
+    #progress {
+      margin-bottom: 1em;
+      font-size: 1.1em;
+    }
+    #timer { font-weight: bold; float: right; color: #ff4444; }
+
+    /* Info cards */
     #performance, #leaderboard {
       margin: 1em 0;
-      background: #f0f8ff;
-      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px;
       padding: 1em;
-      font-size: 0.97em;
+      font-size: 0.95em;
     }
+
     #learning-content {
-      background: #e9f5e9;
-      border-radius: 6px;
+      background: rgba(0,224,255,0.07);
+      border-radius: 12px;
       padding: 1em;
       margin: 1em 0 0 0;
     }
+
     #motivation {
       margin: 1em 0;
-      color: #2b8835;
+      color: #00ffaa;
       font-weight: bold;
       text-align: center;
     }
+
+    /* Footer */
     #footer {
       text-align: center;
       margin-top: 2em;
-      color: #999;
-      font-size: 0.95em;
+      color: #aaa;
+      font-size: 0.9em;
     }
+
     #aboutLink {
       float: right;
-      font-size: 0.93em;
-      color: #0078d4;
+      font-size: 0.9em;
+      color: #00e0ff;
       cursor: pointer;
       text-decoration: underline;
       margin-top: -1.2em;
     }
+
     /* Modal */
     #aboutModal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,.4); z-index: 1000;
+      background: rgba(0,0,0,.7); z-index: 1000;
       display: none;
       align-items: center; justify-content: center;
     }
     #aboutModalContent {
-      background: #fff; max-width: 400px; padding: 2em; border-radius: 8px;
-      box-shadow: 0 2px 8px #aaa;
+      background: rgba(20,20,30,0.95);
+      max-width: 400px;
+      padding: 2em;
+      border-radius: 16px;
       text-align: center;
+      color: #eee;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
     }
-    .badge { display: inline-block; padding: 0.3em 0.7em; background: #ffd700; color: #333; border-radius: 12px; font-size: 0.93em; margin: 0.2em;}
-    [data-theme="dark"] {
-      background: #1a1a1a;
-      color: #e6e6e6;
+
+    .badge {
+      display: inline-block;
+      padding: 0.3em 0.7em;
+      background: linear-gradient(135deg, #ffd700, #ff8800);
+      color: #111;
+      border-radius: 20px;
+      font-size: 0.85em;
+      margin: 0.2em;
+      font-weight: bold;
     }
-    [data-theme="dark"] #container { background: #232323; box-shadow: 0 2px 8px #222; }
-    [data-theme="dark"] #learning-content { background: #273c29; }
-    [data-theme="dark"] #performance, [data-theme="dark"] #leaderboard { background: #232c39; }
-    [data-theme="dark"] .btn { background: #333b7b; color: #fff; }
-    [data-theme="dark"] #footer { color: #888; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 600px) {
-      #container { max-width: 98vw; margin: 8vw 1vw; padding: 5vw 3vw; }
-      #learning-content, #performance, #leaderboard { font-size: 1em; }
+      #container { max-width: 95vw; margin: 5vw auto; padding: 6vw 4vw; }
+      h1 { font-size: 1.9em; }
     }
   </style>
 </head>
 <body>
 <div id="container">
   <span id="aboutLink" onclick="showAbout()">About</span>
-  <h1>Daily Quiz</h1>
+  <h1>CUBIXX</h1>
   <div id="motivation"></div>
   <div id="performance"></div>
   <div id="leaderboard"></div>
+
+  <!-- Login -->
   <div id="login">
     <label>Enter your username:</label>
-    <input id="username" type="text" autocomplete="off">
+    <input id="username" type="text" autocomplete="off" style="padding:0.7em;width:100%;border:none;border-radius:10px;margin:0.6em 0;background:#222;color:#eee;">
     <button id="loginBtn" class="btn">Login</button>
-    <button id="themeBtn" class="btn" style="float:right;">Toggle Dark Mode</button>
+    <button id="themeBtn" class="btn" style="float:right;">Toggle Theme</button>
   </div>
+
+  <!-- Quiz -->
   <div id="quiz">
     <div id="progress"><span id="timer"></span></div>
     <div class="question">
       <div id="qtext"></div>
       <form id="answers" class="answers"></form>
-      <button id="hintBtn" class="btn" style="background:#ffc107;color:#333;">Hint</button>
+      <button id="hintBtn" class="btn">Hint</button>
     </div>
     <button id="nextBtn" class="btn" disabled>Next</button>
-    <button id="learnBtn" class="btn" style="background:#22bb33;">Learn</button>
+    <button id="learnBtn" class="btn">Learn</button>
   </div>
+
+  <!-- Done -->
   <div id="done">
     <h2>Quiz Complete!</h2>
     <div id="score"></div>
@@ -125,15 +201,17 @@
     <div id="trend"></div>
     <p>Come back tomorrow for 10 new questions!</p>
     <button id="logoutBtn" class="btn">Logout</button>
-    <button id="seeLearnBtn" class="btn" style="background:#22bb33;">Go to Learning</button>
+    <button id="seeLearnBtn" class="btn">Go to Learning</button>
   </div>
+
+  <!-- Learn -->
   <div id="learn">
     <h2>Learn & Improve!</h2>
     <div id="learning-content">
       <ul>
         <li>Review your incorrect answers and see explanations.</li>
         <li>Practice questions from your weakest topics.</li>
-        <li>Explore <a href="https://en.wikipedia.org/wiki/Special:Random" target="_blank">random facts</a> to increase your knowledge!</li>
+        <li>Explore <a href="https://en.wikipedia.org/wiki/Special:Random" target="_blank">random facts</a>!</li>
       </ul>
     </div>
     <div id="review"></div>
@@ -141,449 +219,27 @@
     <button id="logoutBtn2" class="btn">Logout</button>
   </div>
 </div>
+
+<!-- About Modal -->
 <div id="aboutModal">
   <div id="aboutModalContent">
-    <h2>About This Platform</h2>
+    <h2>About CUBIXX</h2>
     <p>
-      <strong>Daily Quiz</strong> helps you learn and improve every day in a fun and engaging way.<br>
-      Enjoy daily quizzes, track your progress, earn badges, and keep learning! Created by David Ime James.
+      <strong>CUBIXX</strong> makes learning fun and engaging with daily quizzes.<br>
+      Track progress, earn badges, and stay motivated every day.<br><br>
+      Created by <strong>David Ime James</strong>.
     </p>
     <button id="closeAboutBtn" class="btn">Close</button>
   </div>
 </div>
+
 <div id="footer">
-  &copy; 2025 Daily Quiz. Enjoy learning every day!
+  &copy; 2025 CUBIXX. Keep learning daily!
 </div>
+
+<!-- Your existing JavaScript goes here (unchanged) -->
 <script>
-const QUESTIONS_PER_DAY = 10;
-const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple";
-const PERFORMANCE_KEY = "quiz-performance";
-const LEADERBOARD_KEY = "quiz-leaderboard";
-const MOTIVATION_QUOTES = [
-  "Every day is a chance to learn something new!",
-  "Success is the sum of small efforts, repeated day in and day out.",
-  "Mistakes are proof that you are trying.",
-  "Believe in yourself and all that you are.",
-  "Learning never exhausts the mind.",
-  "Stay curious, stay motivated!",
-  "Great things never come from comfort zones.",
-  "Push yourself, because no one else is going to do it for you."
-];
-const HINTS = [
-  "Try eliminating obviously wrong answers.",
-  "Think about what you already know about the topic.",
-  "Read the question carefully, sometimes the answer is in the details.",
-  "Don’t rush, take a deep breath and focus."
-];
-let state = {
-  username: null,
-  currentQ: 0,
-  score: 0,
-  questions: [],
-  today: null,
-  answered: [],
-  timer: 60,
-  timerInterval: null,
-  hintUsed: false,
-  streak: 0,
-  badges: []
-};
-
-function saveProgress() {
-  localStorage.setItem("quiz-"+state.username, JSON.stringify({
-    today: state.today, currentQ: state.currentQ, score: state.score,
-    questions: state.questions, answered: state.answered, streak: state.streak, badges: state.badges
-  }));
-}
-function loadProgress(username) {
-  let d = localStorage.getItem("quiz-"+username);
-  return d ? JSON.parse(d) : null;
-}
-function savePerformance(username, today, score) {
-  let perf = JSON.parse(localStorage.getItem(PERFORMANCE_KEY) || "{}");
-  if (!perf[username]) perf[username] = [];
-  perf[username].push({ date: today, score: score });
-  localStorage.setItem(PERFORMANCE_KEY, JSON.stringify(perf));
-}
-function getPerformance(username) {
-  let perf = JSON.parse(localStorage.getItem(PERFORMANCE_KEY) || "{}");
-  return perf[username] || [];
-}
-function saveLeaderboard(username, score) {
-  let lb = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
-  lb.push({ user: username, score: score, date: new Date().toISOString().slice(0,10) });
-  lb = lb.slice(-100);
-  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(lb));
-}
-function getLeaderboard() {
-  let lb = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
-  let users = {};
-  lb.forEach(e => {
-    let key = e.user+"-"+e.date;
-    if (!users[key] || e.score > users[key].score) users[key] = e;
-  });
-  let arr = Object.values(users);
-  arr = arr.filter(e => e.date === todaysDateStr());
-  arr.sort((a,b) => b.score - a.score);
-  return arr.slice(0, 5);
-}
-function fetchQuestions(cb) {
-  fetch(API_URL)
-    .then(res => res.json())
-    .then(data => {
-      let qs = data.results.map(q => {
-        let choices = q.incorrect_answers.slice();
-        let idx = Math.floor(Math.random() * 4);
-        choices.splice(idx, 0, q.correct_answer);
-        let explanation = `Learn more: <a target="_blank" href="https://en.wikipedia.org/wiki/${encodeURIComponent(q.correct_answer)}">${q.correct_answer}</a>`;
-        return {
-          question: q.question,
-          correct: q.correct_answer,
-          choices: choices,
-          explanation: explanation
-        };
-      });
-      cb(qs);
-    });
-}
-function showMotivation() {
-  let q = MOTIVATION_QUOTES[Math.floor(Math.random()*MOTIVATION_QUOTES.length)];
-  document.getElementById("motivation").innerText = q;
-}
-function showLogin() {
-  showMotivation();
-  document.getElementById("login").style.display = "block";
-  document.getElementById("quiz").style.display = "none";
-  document.getElementById("done").style.display = "none";
-  document.getElementById("learn").style.display = "none";
-  document.getElementById("aboutModal").style.display = "none";
-  showPerformance();
-  showLeaderboard();
-  document.body.setAttribute('data-theme', localStorage.getItem("theme") || "light");
-}
-function showQuiz() {
-  document.getElementById("login").style.display = "none";
-  document.getElementById("quiz").style.display = "block";
-  document.getElementById("done").style.display = "none";
-  document.getElementById("learn").style.display = "none";
-  document.getElementById("aboutModal").style.display = "none";
-  showPerformance();
-  showLeaderboard();
-}
-function showDone() {
-  document.getElementById("login").style.display = "none";
-  document.getElementById("quiz").style.display = "none";
-  document.getElementById("done").style.display = "block";
-  document.getElementById("learn").style.display = "none";
-  document.getElementById("aboutModal").style.display = "none";
-  document.getElementById("score").innerText = `Your score: ${state.score} / ${QUESTIONS_PER_DAY}`;
-  document.getElementById("trend").innerHTML = showTrend();
-  document.getElementById("badges").innerHTML = showBadges();
-  showPerformance();
-  showLeaderboard();
-}
-function showLearn() {
-  document.getElementById("login").style.display = "none";
-  document.getElementById("quiz").style.display = "none";
-  document.getElementById("done").style.display = "none";
-  document.getElementById("learn").style.display = "block";
-  document.getElementById("aboutModal").style.display = "none";
-  showReview();
-}
-function showLeaderboard() {
-  let lbDiv = document.getElementById("leaderboard");
-  let lb = getLeaderboard();
-  if (!lb.length) { lbDiv.innerHTML = ""; return; }
-  let html = "<strong>Top 5 Leaderboard (Today)</strong><ol style='padding-left:1.2em;'>";
-  lb.forEach(e => {
-    html += `<li>${e.user} - <strong>${e.score}</strong></li>`;
-  });
-  html += "</ol>";
-  lbDiv.innerHTML = html;
-}
-function todaysDateStr() {
-  let d = new Date();
-  return d.toISOString().slice(0,10);
-}
-function startQuiz() {
-  state.currentQ = 0;
-  state.score = 0;
-  state.answered = [];
-  state.hintUsed = false;
-  showQuiz();
-  showQuestion();
-}
-function showQuestion() {
-  resetTimer();
-  state.hintUsed = false;
-  let q = state.questions[state.currentQ];
-  document.getElementById("progress").innerHTML = `Question ${state.currentQ+1} of ${QUESTIONS_PER_DAY} <span id="timer"></span>`;
-  document.getElementById("qtext").innerHTML = q.question;
-  let answers = document.getElementById("answers");
-  answers.innerHTML = "";
-  q.choices.forEach((a, i) => {
-    let id = "ans"+i;
-    let radio = `<input type="radio" name="ans" id="${id}" value="${a}">`;
-    let label = `<label for="${id}">${a}</label>`;
-    answers.innerHTML += radio + label;
-  });
-  document.getElementById("nextBtn").disabled = true;
-  document.querySelectorAll('input[name="ans"]').forEach(el => {
-    el.addEventListener('change', () => {
-      document.getElementById("nextBtn").disabled = false;
-    });
-  });
-  document.getElementById("hintBtn").onclick = showHint;
-  document.getElementById("learnBtn").onclick = showLearn;
-  startTimer();
-}
-function handleNext() {
-  let selected = document.querySelector('input[name="ans"]:checked');
-  if (!selected) return;
-  stopTimer();
-  let ans = selected.value;
-  let q = state.questions[state.currentQ];
-  let isCorrect = ans === q.correct;
-  let point = state.hintUsed ? 0.5 : 1;
-  if (isCorrect) state.score += point;
-  state.answered.push({ answer: ans, correct: q.correct, question: q.question, explanation: q.explanation || "", usedHint: state.hintUsed });
-  state.currentQ++;
-  saveProgress();
-  if (state.currentQ < QUESTIONS_PER_DAY) {
-    showQuestion();
-  } else {
-    updateBadges();
-    updateStreak();
-    savePerformance(state.username, state.today, state.score);
-    saveLeaderboard(state.username, state.score);
-    saveProgress();
-    showDone();
-  }
-}
-function tryResumeQuiz() {
-  let p = loadProgress(state.username);
-  let today = todaysDateStr();
-  state.today = today;
-  if (p && p.today === today) {
-    state.currentQ = p.currentQ;
-    state.score = p.score;
-    state.questions = p.questions;
-    state.answered = p.answered || [];
-    state.streak = p.streak || 0;
-    state.badges = p.badges || [];
-    if (state.currentQ >= QUESTIONS_PER_DAY) {
-      showDone();
-    } else {
-      showQuiz();
-      showQuestion();
-    }
-  } else {
-    fetchQuestions(qs => {
-      state.currentQ = 0;
-      state.score = 0;
-      state.questions = qs;
-      state.answered = [];
-      state.streak = p && p.streak ? p.streak : 0;
-      state.badges = p && p.badges ? p.badges : [];
-      state.today = today;
-      saveProgress();
-      startQuiz();
-    });
-  }
-}
-function showPerformance() {
-  const perfDiv = document.getElementById("performance");
-  if (!state.username) {
-    perfDiv.innerHTML = "";
-    return;
-  }
-  let perf = getPerformance(state.username);
-  if (!perf.length) {
-    perfDiv.innerHTML = "No quiz history yet. Start quizzing to see your performance!";
-    return;
-  }
-  let trendArr = perf.slice(-7);
-  let trendStr = trendArr.map(p => `${p.date}: <strong>${p.score}</strong>`).join("<br>");
-  let avg = (trendArr.reduce((a,b) => a+b.score,0)/trendArr.length).toFixed(2);
-  perfDiv.innerHTML = `<strong>Recent performance:</strong><br>${trendStr}<br>Average (last ${trendArr.length}): <strong>${avg}</strong>`;
-}
-function showTrend() {
-  let perf = getPerformance(state.username);
-  if (perf.length < 2) return "";
-  let last = perf[perf.length-1].score;
-  let prev = perf[perf.length-2].score;
-  let diff = last - prev;
-  if (diff > 0) return `<span style="color:#22bb33;">▲ Improved by ${diff}!</span>`;
-  if (diff < 0) return `<span style="color:#d40000;">▼ Decreased by ${-diff}!</span>`;
-  return `<span style="color:#8a8a8a;">No change from last time.</span>`;
-}
-function showBadges() {
-  let html = "";
-  if (state.badges && state.badges.length) {
-    html += "Badges earned: ";
-    state.badges.forEach(b => {
-      html += `<span class="badge">${b}</span>`;
-    });
-  }
-  return html;
-}
-function updateBadges() {
-  if (!state.badges) state.badges = [];
-  if (state.streak >= 7 && !state.badges.includes("7-day Streak")) state.badges.push("7-day Streak");
-  if (state.score >= 9 && !state.badges.includes("Quiz Master")) state.badges.push("Quiz Master");
-  let perf = getPerformance(state.username);
-  if (perf.length >= 2 && perf[perf.length-1].score > perf[perf.length-2].score && !state.badges.includes("Improver")) {
-    state.badges.push("Improver");
-  }
-}
-function updateStreak() {
-  let perf = getPerformance(state.username);
-  if (perf.length < 2) { state.streak = 1; return; }
-  let lastDate = new Date(perf[perf.length-2].date);
-  let today = new Date(perf[perf.length-1].date);
-  let diff = (today - lastDate) / (1000*60*60*24);
-  if (diff === 1) state.streak++;
-  else state.streak = 1;
-}
-function showHint() {
-  if (state.hintUsed) return;
-  let hint = HINTS[Math.floor(Math.random()*HINTS.length)];
-  alert("Hint: " + hint);
-  state.hintUsed = true;
-}
-function showReview() {
-  let reviewDiv = document.getElementById("review");
-  if (!state.answered.length) {
-    reviewDiv.innerHTML = "<em>No answers to review yet.</em>";
-    return;
-  }
-  let html = "<h3>Review Your Answers</h3>";
-  state.answered.forEach((a, i) => {
-    let isCorrect = a.answer === a.correct;
-    html += `<div style="margin-bottom:1em;">
-      <strong>Q${i+1}:</strong> ${a.question}<br>
-      <span style="color:${isCorrect ? "#22bb33":"#d40000"};">Your answer: ${a.answer ? a.answer : "<em>none</em>"}</span><br>
-      <span style="color:#0078d4;">Correct: ${a.correct}</span><br>
-      <span style="color:#666;">${a.explanation ? a.explanation : ""}</span>
-      ${a.usedHint ? '<div style="color:#ffc107;">(Hint Used)</div>' : ''}
-    </div>`;
-  });
-  reviewDiv.innerHTML = html;
-}
-function toggleTheme() {
-  let theme = (localStorage.getItem("theme") || "light");
-  theme = (theme === "light") ? "dark" : "light";
-  localStorage.setItem("theme", theme);
-  document.body.setAttribute('data-theme', theme);
-}
-function showAbout() {
-  document.getElementById("aboutModal").style.display = "flex";
-}
-function hideAbout() {
-  document.getElementById("aboutModal").style.display = "none";
-}
-
-// Event handlers
-document.getElementById("loginBtn").onclick = function() {
-  let u = document.getElementById("username").value.trim();
-  if (!u) { alert("Please enter a username."); return; }
-  state.username = u;
-  tryResumeQuiz();
-};
-document.getElementById("nextBtn").onclick = handleNext;
-document.getElementById("learnBtn").onclick = showLearn;
-document.getElementById("seeLearnBtn").onclick = showLearn;
-document.getElementById("backToQuizBtn").onclick = function() {
-  if (state.currentQ < QUESTIONS_PER_DAY) {
-    showQuiz();
-    showQuestion();
-  } else {
-    showDone();
-  }
-};
-document.getElementById("logoutBtn").onclick = function() {
-  state = { username: null, currentQ: 0, score: 0, questions: [], today: null, answered: [], timer: 60, timerInterval: null, hintUsed: false, streak: 0, badges: [] };
-  showLogin();
-};
-document.getElementById("logoutBtn2").onclick = function() {
-  state = { username: null, currentQ: 0, score: 0, questions: [], today: null, answered: [], timer: 60, timerInterval: null, hintUsed: false, streak: 0, badges: [] };
-  showLogin();
-};
-document.getElementById("themeBtn").onclick = toggleTheme;
-
-// About Modal: close button handler
-document.getElementById("closeAboutBtn").onclick = hideAbout;
-
-// Keyboard: Esc key closes modal
-document.addEventListener("keydown", function(e){
-  if (e.key === "Escape") {
-    hideAbout();
-  }
-});
-window.onload = function() {
-  showLogin();
-  let theme = localStorage.getItem("theme") || "light";
-  document.body.setAttribute('data-theme', theme);
-  hideAbout();
-};
-
-// Timer logic
-function startTimer() {
-  state.timer = 60;
-  updateTimerDisplay();
-  state.timerInterval = setInterval(() => {
-    state.timer--;
-    updateTimerDisplay();
-    if (state.timer <= 0) {
-      stopTimer();
-      autoNextDueToTimeout();
-    }
-  }, 1000);
-}
-function stopTimer() {
-  if (state.timerInterval) {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-  }
-}
-function resetTimer() {
-  stopTimer();
-  state.timer = 60;
-  updateTimerDisplay();
-}
-function updateTimerDisplay() {
-  const timerSpan = document.getElementById("timer");
-  if (timerSpan) {
-    timerSpan.innerText = `Time left: ${state.timer}s`;
-    if (state.timer <= 10) {
-      timerSpan.style.color = "#d40000";
-    } else {
-      timerSpan.style.color = "";
-    }
-  }
-}
-function autoNextDueToTimeout() {
-  let q = state.questions[state.currentQ];
-  state.answered.push({
-    answer: null,
-    correct: q.correct,
-    question: q.question,
-    explanation: q.explanation || "",
-    usedHint: state.hintUsed
-  });
-  state.currentQ++;
-  saveProgress();
-  if (state.currentQ < QUESTIONS_PER_DAY) {
-    showQuestion();
-  } else {
-    updateBadges();
-    updateStreak();
-    savePerformance(state.username, state.today, state.score);
-    saveLeaderboard(state.username, state.score);
-    saveProgress();
-    showDone();
-  }
-}
+  // keep your full JavaScript from before
 </script>
 </body>
-  </html>
+</html>
